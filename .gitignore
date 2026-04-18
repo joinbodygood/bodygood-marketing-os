@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Build artifacts (Replit will build fresh on deploy)
+dist/
+build/
+.vite/
+
+# Environment — NEVER commit .env
+.env
+.env.local
+.env.*.local
+server/.env
+client/.env
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Temp
+tmp/
+exports/
+*.zip
+
+# Replit
+.upm/
+.cache/
+.config/
+
+# Local secrets backup (DB password, etc. — created during setup)
+bgmos-supabase-secrets.txt
