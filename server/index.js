@@ -36,7 +36,7 @@ if (!IS_PROD) {
     })
   );
 }
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '40mb' })); // designs arrive as base64 (25mb raw ≈ 33mb base64)
 
 app.get('/api/health', (_req, res) => {
   res.json({

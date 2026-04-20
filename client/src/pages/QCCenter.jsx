@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import Layout from '../components/Layout.jsx';
+import DesignPanel from '../components/DesignPanel.jsx';
 import { api } from '../lib/api.js';
 import { supabase } from '../lib/supabase.js';
 
@@ -188,6 +189,9 @@ export default function QCCenter() {
                 onApprove={() => approve(item)}
                 onReject={() => reject(item)}
                 onRegenerate={() => regenerate(item)}
+                onItemUpdated={(next) =>
+                  setItems((arr) => arr.map((x) => (x.id === next.id ? next : x)))
+                }
               />
             ))}
           </div>
@@ -221,7 +225,7 @@ function CampaignBanner({ campaign, onExport }) {
   );
 }
 
-function ContentCard({ item, busy, onApprove, onReject, onRegenerate }) {
+function ContentCard({ item, busy, onApprove, onReject, onRegenerate, onItemUpdated }) {
   const [expanded, setExpanded] = useState(false);
   const statusColor =
     item.status === 'approved'
@@ -262,6 +266,7 @@ function ContentCard({ item, busy, onApprove, onReject, onRegenerate }) {
           </button>
         </div>
       </div>
+      <DesignPanel item={item} onItemUpdated={onItemUpdated} />
       {item.status === 'pending_review' && (
         <div className="flex gap-2 mt-3 justify-end">
           <button

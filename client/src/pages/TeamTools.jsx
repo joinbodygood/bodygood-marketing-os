@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import Layout from '../components/Layout.jsx';
+import DesignPanel from '../components/DesignPanel.jsx';
 import { api } from '../lib/api.js';
 import { useAuth } from '../hooks/useAuth.js';
 
@@ -226,6 +227,12 @@ export default function TeamTools() {
                   {result.usage.output_tokens}
                 </div>
               )}
+              <DesignPanel
+                item={result.item}
+                onItemUpdated={(next) =>
+                  setResult((r) => (r ? { ...r, item: next } : r))
+                }
+              />
             </div>
           )}
         </div>

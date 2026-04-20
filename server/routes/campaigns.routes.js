@@ -83,11 +83,28 @@ router.get('/:id/export', requireRole('ceo', 'operations'), async (req, res, nex
 
     for (const item of items || []) {
       const teamFolder = TEAM_FOLDERS[item.team] || `99-${item.team}`;
-      const filename = `${slug(item.title || item.content_type)}.txt`;
+      const baseName = slug(item.title || item.content_type);
       archive.append(
         `${item.content_type.toUpperCase()}${item.title ? ` — ${item.title}` : ''}\n\n${item.content}\n`,
-        { name: `${folder}/${teamFolder}/${filename}` }
+        { name: `${folder}/${teamFolder}/${baseName}.txt` }
       );
+
+      // Attach any uploaded design files inline with the copy
+      const designs = item.design_urls || [];
+      for (let i = 0; i < designs.length; i++) {
+        const url = designs[i];
+        try {
+          const resp = await fetch(url);
+          if (!resp.ok) continue;
+          const buf = Buffer.from(await resp.arrayBuffer());
+          const ext = extFromUrl(url) || 'png';
+          archive.append(buf, {
+            name: `${folder}/${teamFolder}/${baseName}-design-${i + 1}.${ext}`,
+          });
+        } catch (e) {
+          console.warn('[export] design fetch failed:', url, e.message);
+        }
+      }
     }
 
     await archive.finalize();
@@ -98,6 +115,11 @@ router.get('/:id/export', requireRole('ceo', 'operations'), async (req, res, nex
 
 function slug(s) {
   return (s || 'untitled').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+}
+
+function extFromUrl(url) {
+  const m = url.match(/\.([a-z0-9]+)(?:\?|$)/i);
+  return m ? m[1].toLowerCase() : null;
 }
 
 function briefText(c) {
