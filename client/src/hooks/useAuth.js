@@ -5,10 +5,12 @@ import { api } from '../lib/api.js';
 export function useAuth() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const loadProfile = useCallback(async () => {
+    setProfileLoading(true);
     try {
       const { data } = await api.get('/api/auth/me');
       setProfile(data.profile);
@@ -16,23 +18,35 @@ export function useAuth() {
     } catch (err) {
       setProfile(null);
       setError(err.response?.data?.error || err.message);
+    } finally {
+      setProfileLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     if (!supabase) {
-      setLoading(false);
+      setSessionReady(true);
       setError('supabase_not_configured');
       return;
     }
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      setSession(data.session);
-      if (data.session) await loadProfile();
-      setLoading(false);
-    });
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (cancelled) return;
+        setSession(data.session);
+        if (data.session) {
+          await loadProfile();
+        }
+      } finally {
+        if (!cancelled) setSessionReady(true);
+      }
+    })();
 
     const { data: sub } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+      if (cancelled) return;
       setSession(nextSession);
       if (nextSession) {
         await loadProfile();
@@ -41,7 +55,10 @@ export function useAuth() {
       }
     });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
   }, [loadProfile]);
 
   const signIn = useCallback(async (email, password) => {
@@ -59,7 +76,21 @@ export function useAuth() {
     await supabase.auth.signOut();
     setSession(null);
     setProfile(null);
+    setError(null);
   }, []);
 
-  return { session, profile, loading, error, signIn, signOut, reloadProfile: loadProfile };
+  // Composite flags for callers
+  const loading = !sessionReady || (!!session && profileLoading && !profile);
+
+  return {
+    session,
+    profile,
+    loading,
+    sessionReady,
+    profileLoading,
+    error,
+    signIn,
+    signOut,
+    reloadProfile: loadProfile,
+  };
 }

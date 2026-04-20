@@ -3,14 +3,17 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 
 export default function Login() {
-  const { session, signIn, loading } = useAuth();
+  const { session, profile, signIn, sessionReady } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState(null);
   const location = useLocation();
 
-  if (!loading && session) {
+  // Only redirect away if BOTH session AND profile resolved. Otherwise
+  // ProtectedRoute's own handling covers the loading / error states —
+  // avoids the Login ↔ ProtectedRoute infinite loop.
+  if (sessionReady && session && profile) {
     const from = location.state?.from?.pathname || '/';
     return <Navigate to={from} replace />;
   }
