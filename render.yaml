@@ -2,7 +2,7 @@ services:
   - type: web
     name: bodygood-marketing-os
     runtime: node
-    plan: starter                       # $7/mo — keeps crons + server always-on (free tier sleeps)
+    plan: free                          # $0 — sleeps after 15 min idle, crons don't fire reliably. Upgrade to 'starter' once billing added.
     region: ohio                        # closest to Miami
     branch: main
     buildCommand: npm install && npm run build
