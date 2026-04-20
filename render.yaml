@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: bodygood-marketing-os
+    runtime: node
+    plan: starter                       # $7/mo — keeps crons + server always-on (free tier sleeps)
+    region: ohio                        # closest to Miami
+    branch: main
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    autoDeploy: true                    # redeploy on every git push to main
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      # Supabase — secret, prompted at deploy time
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      # Client-side (VITE_*) — baked into the bundle at build time
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_API_URL
+        value: ""                       # same-origin in prod, no value needed
+      # AI + analytics
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: WINDSOR_AI_API_KEY
+        sync: false
+      - key: APIFY_API_TOKEN
+        sync: false
+      # Phase 2 — fine to leave blank
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: HEYGEN_API_KEY
+        sync: false
